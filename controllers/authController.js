@@ -4,19 +4,11 @@ import bcrypt from "bcrypt";
 const SECRET = "hello123";
 
 const signup = async (req, res) => {
-  try {
-    const body = req.body;
-    if (!body.email || !body.password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
-    const hashPassword = await bcrypt.hash(body.password, 10);
-    body.password = hashPassword;
-    const result = await userModel.create(body);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error("Signup Error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  const body = req.body;
+  const hashPassword = await bcrypt.hash(body.password, 10);
+  body.password = hashPassword;
+  const result = await userModel.create(body);
+  res.json(result);
 };
 
 const loginForm = (req, res) => {
@@ -24,38 +16,33 @@ const loginForm = (req, res) => {
 };
 
 const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
-    const found = await userModel.findOne({ email });
-    console.log("session" + (req.session?.user || "undefined"));
-    if (found) {
-      const chkPassword = await bcrypt.compare(password, found.password);
-      if (chkPassword) {
-        const user = {
-          id: found._id,
-          name: found.name,
-          email: found.email,
-          role: found.role,
-        };
-        if (found.role === "admin") {
-          req.session.user = user;
-          return res.redirect("/users");
-        } else {
-          const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
-          return res.json({ ...user, token });
-        }
+  const { email, password } = req.body;
+  const found = await userModel.findOne({ email });
+  console.log("session" + req.session.user);
+  if (found) {
+    const chkPassword = await bcrypt.compare(password, found.password);
+    if (chkPassword) {
+      const user = {
+        id: found._id,
+        name: found.name,
+        email: found.email,
+        role: found.role,
+      };
+      if (found.role === "admin") {
+        req.session.user = user;
+        res.redirect("/users");
       } else {
-        return res.status(401).json({ message: "Invalid Password" });
+        const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
+        res.json({ ...user, token });
       }
+
     } else {
-      return res.status(401).json({ message: "User not found" });
+      res.render("auth/login-form", { error: "Invalid Password" });
+      // res.status(401).json({ message: "Invalid Password" });
     }
-  } catch (error) {
-    console.error("Login Error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+  } else {
+    res.render("auth/login-form", { error: "User not found" });
+    // res.status(401).json({ message: "User not found" });
   }
 };
 
