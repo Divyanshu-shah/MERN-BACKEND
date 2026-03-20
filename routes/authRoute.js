@@ -7,7 +7,6 @@ import {
 } from "../controllers/authController.js";
 import express from "express";
 const authRouter = express.Router();
-authRouter.get("/login", loginForm);
 authRouter.post("/login", login);
 authRouter.get("/logout", logout);
 authRouter.post("/signup", signup);

@@ -40,21 +40,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root route
-app.get("/", (req, res) => {
-  res.render("home");
-});
-
 app.use("/admin", authRouter);
-
-// app.use((req, res, next) => {
-//   if (req.session.user) {
-//     next();
-//   } else {
-//     res.render("auth/login-form");
-//   }
-// });
-
 app.use("/users", userRouter);
 app.use("/products", productRouter);
 app.use("/orders",orderRouter)
